@@ -1,44 +1,66 @@
-# 🏥 Projeto GeraSaúde - Recurso Categoria
+# 🏥 Projeto GeraSaúde - Documentação da API
 
-Este módulo é responsável pelo gerenciamento das categorias de produtos da farmácia **GeraSaúde**. Através deste recurso, é possível organizar o catálogo e controlar a visibilidade de grupos de produtos.
+Este módulo é responsável pelo gerenciamento completo do catálogo da farmácia **GeraSaúde**. A API permite a organização de categorias e o controle rigoroso de produtos, marcas e níveis de estoque através de um sistema robusto e relacionado.
 
 ---
 
-## 🏗️ Estrutura da Entidade (Model)
+## 🏗️ Estrutura das Entidades (Models)
 
-A entidade foi mapeada utilizando **TypeORM** para a tabela `tb_categorias`, garantindo a integridade dos dados e validação técnica.
+As entidades foram mapeadas utilizando **TypeORM** e validadas com **Class Validator**, garantindo a integridade dos dados desde a entrada até a persistência no banco de dados.
 
-| Atributo | Tipo | Validação | Descrição |
+
+
+### 1. Categoria (`tb_categorias`)
+Entidade mestre que agrupa os produtos e gerencia a disponibilidade de grupos inteiros no sistema.
+
+| Atributo | Tipo | Decoradores / Validação | Descrição |
 | :--- | :--- | :--- | :--- |
-| **id** | `number` | Primary Key | Identificador único gerado automaticamente. |
-| **nome** | `string` | Not Empty | Nome da categoria (Máx: 100 caracteres). |
-| **descricao**| `string` | Not Empty | Descrição detalhada (Máx: 1000 caracteres). |
-| **status** | `boolean` | Default: `true` | Indica se a categoria está ativa ou inativa. |
-| **data** | `Date` | UpdateDate | Armazena automaticamente a data da última alteração. |
+| **id** | `number` | `@PrimaryGeneratedColumn()` | Identificador único gerado automaticamente. |
+| **nome** | `string` | `@IsNotEmpty()` (L: 100) | Nome da categoria (ex: Medicamentos). |
+| **descricao**| `string` | `@IsNotEmpty()` (L: 1000) | Explicação detalhada da categoria. |
+| **status** | `boolean` | `@Column({ default: true })` | Define se a categoria está ativa. |
+| **data** | `Date` | `@UpdateDateColumn()` | Timestamp da última atualização. |
+| **produto** | `Rel` | `@OneToMany` | Relacionamento com a lista de produtos. |
+
+### 2. Produto (`tb_produtos`)
+Entidade detalhada que armazena os dados comerciais e técnicos de cada item.
+
+| Atributo | Tipo | Decoradores / Validação | Descrição |
+| :--- | :--- | :--- | :--- |
+| **id** | `number` | `@PrimaryGeneratedColumn()` | Identificador único do produto. |
+| **titulo** | `string` | `@IsNotEmpty()` (L: 255) | Título comercial do item. |
+| **marca** | `string` | `@IsNotEmpty()` (L: 255) | Fabricante ou Marca do produto. |
+| **preco** | `number` | `decimal (10,2)` | Valor unitário com precisão decimal. |
+| **quantidade** | `number` | `int` | Saldo físico em estoque. |
+| **foto** | `string` | `@IsOptional()`, `@IsUrl()` | Link da imagem (L: 5000). |
+| **categoria** | `Rel` | `@ManyToOne` (CASCADE) | Categoria à qual o produto pertence. |
 
 ---
 
-## 🛠️ Métodos do CRUD
+## 🛠️ Regras de Negócio e Métodos do CRUD
 
-O Service e o Controller foram implementados com os seguintes métodos de manipulação de dados:
+O Service e o Controller foram implementados com as seguintes lógicas:
 
 ### 🔍 Métodos de Listagem e Busca
-* **`findAll`**: Retorna todas as categorias registradas no sistema.
-* **`findById`**: Localiza uma categoria específica utilizando o `id`. Caso não encontre, retorna erro `404 (Not Found)`.
-* **`findByAllNome`**: Realiza uma busca textual por categorias que contenham o nome pesquisado (ignora maiúsculas e minúsculas).
-* **`findByStatus`**: Filtra os registros com base no campo booleano (útil para listar apenas categorias ativas no Front-end).
+* **`findAll`**: Retorna todos os registros. No recurso de Produtos, os dados da Categoria são carregados automaticamente.
+* **`findById`**: Localiza um registro específico por ID. Retorna erro `404 (Not Found)` caso não exista.
+* **`Busca Textual`**: 
+    * **Categorias**: Busca parcial pelo campo `nome`.
+    * **Produtos**: Busca parcial pelos campos `titulo` ou `marca`.
 
-### ⚙️ Métodos de Persistência
-* **`criar`**: Registra uma nova categoria no banco de dados. Graças ao `@Column({ default: true })`, novas categorias nascem como ativas por padrão.
-* **`atualizar`**: Altera os dados de uma categoria existente. O método valida a existência do ID antes de salvar as mudanças.
-* **`deletar`**: Remove definitivamente a categoria do sistema. Possui validação para garantir que o registro existe antes da exclusão.
+### ⚙️ Persistência e Integridade
+* **Relacionamento Bidirecional**: As entidades estão conectadas para permitir consultas cruzadas eficientes.
+* **Exclusão em Cascata (`onDelete: "CASCADE"`)**: Definido na entidade Produto. Ao excluir uma categoria, todos os produtos vinculados a ela são removidos para evitar inconsistência de dados (registros órfãos).
+* **Data Automática**: O campo `data` em Categoria utiliza `@UpdateDateColumn()`, atualizando-se sozinho a cada modificação.
 
 ---
 
-## 📥 Exemplo de JSON para Cadastro
+## 📥 Exemplos de JSON (Payloads)
+
+### Cadastro de Categoria
 ```json
 {
-  "nome": "Suplementos Alimentares",
-  "descricao": "Vitaminas, Whey Protein e complementos nutricionais.",
+  "nome": "Higiene Pessoal",
+  "descricao": "Produtos para cuidados diários, banho e perfumaria.",
   "status": true
 }
