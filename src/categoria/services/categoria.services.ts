@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Categoria } from "../entities/categoria.entity";
 import { ILike, Repository } from "typeorm";
+import { uptime } from "process";
 
 
 @Injectable()
@@ -53,4 +54,12 @@ export class CategoriaService {
     async create(categoria: Categoria): Promise<Categoria> {
         return await this.categoriaRepository.save(categoria);
     }
+
+    async update(categoria: Categoria): Promise<Categoria> {
+        
+        await this.findById(categoria.id)
+
+        return await this.categoriaRepository.save(categoria);
+    }
+
 }

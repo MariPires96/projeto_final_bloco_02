@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseBoolPipe, ParseIntPipe, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseBoolPipe, ParseIntPipe, Post, Put } from "@nestjs/common";
 import { CategoriaService } from "../services/categoria.services";
 import { Categoria } from "../entities/categoria.entity";
 
@@ -35,5 +35,11 @@ export class CategoriaController {
     @HttpCode(HttpStatus.CREATED)
     create(@Body() categoria: Categoria): Promise<Categoria> {
         return this.categoriaService.create(categoria);
+    }
+
+    @Put()
+    @HttpCode(HttpStatus.OK)
+    update(@Body() categoria: Categoria): Promise<Categoria> {
+        return this.categoriaService.update(categoria);
     }
 }
